@@ -34,13 +34,24 @@ def scan_port(target, port, timeout=1.0):
         bool: True if port is open, False otherwise
     """
     try:
-        # TODO: Create a socket
-        # TODO: Set timeout
-        # TODO: Try to connect to target:port
-        # TODO: Close the socket
-        # TODO: Return True if connection successful
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        s.connect((target, port))
 
-        pass  # Remove this and implement
+        banner = ""
+        try:
+            s.sendall(b"HEAD / HTTP/1.0\r\n\r\n")
+            banner = s.recv(1024).decode(errors="ignore").strip()
+        except:
+            pass
+
+        if banner:
+            print(f"[OPEN] Port {port} | Banner: {banner.splitlines()[0]}")
+        else:
+            print(f"[OPEN] Port {port}")
+
+        s.close()
+        return True
 
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False
@@ -68,10 +79,9 @@ def scan_range(target, start_port, end_port):
     # Hint: Consider using threading for better performance
 
     for port in range(start_port, end_port + 1):
-        # TODO: Scan this port
-        # TODO: If open, add to open_ports list
-        # TODO: Print progress (optional)
-        pass  # Remove this and implement
+        is_open = scan_port(target, port)
+        if is_open:
+            open_ports.append(port)
 
     return open_ports
 
@@ -91,7 +101,7 @@ def main():
 
     target = sys.argv[1]
     start_port = 1
-    end_port = 1024  # Scan first 1024 ports by default
+    end_port = 10000  # Scan first 1024 ports by default
 
     print(f"[*] Starting port scan on {target}")
 
